@@ -1,0 +1,165 @@
+// ============================================
+// SafeLink – Prisma Schema (SQLite)
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Users ───
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String   @default("")
+  role      String   @default("user") // "user" | "admin"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rides          Ride[]
+  incidents      Incident[]
+  familyMembers  FamilyMember[]
+}
+
+// ─── Rides ───
+model Ride {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  type          String   @default("ride") // "ride" | "delivery"
+  status        String   @default("active") // "active" | "completed" | "cancelled"
+  pickupAddress String
+  destAddress   String
+  pickupLat     Float
+  pickupLng     Float
+  destLat       Float
+  destLng       Float
+  driverName    String
+  driverVehicle String
+  driverPlate   String
+  driverPhone   String
+  driverRating  Float    @default(4.5)
+  otp           String
+  safetyScore   Int      @default(100)
+  aiSafetyMode  Boolean  @default(true)
+  fare          Float    @default(0)
+  startedAt     DateTime @default(now())
+  endedAt       DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user      User           @relation(fields: [userId], references: [id])
+  locations RideLocation[]
+  alerts    Alert[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ─── Ride Location Updates ───
+model RideLocation {
+  id        Int      @id @default(autoincrement())
+  rideId    Int
+  lat       Float
+  lng       Float
+  speed     Float    @default(0)
+  heading   Float    @default(0)
+  timestamp DateTime @default(now())
+
+  ride Ride @relation(fields: [rideId], references: [id])
+
+  @@index([rideId])
+  @@index([timestamp])
+}
+
+// ─── Safety Alerts ───
+model Alert {
+  id        Int      @id @default(autoincrement())
+  rideId    Int
+  type      String   // "critical" | "warning" | "info" | "safe"
+  category  String   // "route_deviation" | "inactivity" | "high_risk_zone" | "speed_anomaly" | "night_risk" | "police_nearby" | "geofence_breach"
+  title     String
+  message   String
+  icon      String   @default("⚠️")
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  ride Ride @relation(fields: [rideId], references: [id])
+
+  @@index([rideId])
+  @@index([type])
+}
+
+// ─── Public Utilities ───
+model Utility {
+  id       Int     @id @default(autoincrement())
+  type     String  // "police" | "hospital" | "pharmacy" | "safezone"
+  name     String
+  address  String
+  lat      Float
+  lng      Float
+  phone    String  @default("")
+  open24   Boolean @default(false)
+}
+
+// ─── Risk Zones (Geofencing) ───
+model RiskZone {
+  id        Int    @id @default(autoincrement())
+  name      String
+  lat       Float
+  lng       Float
+  radiusKm  Float  @default(0.5)
+  riskLevel String @default("medium") // "low" | "medium" | "high"
+}
+
+// ─── Incident Reports ───
+model Incident {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  rideId      Int?
+  type        String
+  severity    String
+  description String
+  status      String   @default("open") // "open" | "investigating" | "resolved"
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+// ─── Analytics Logs ───
+model AnalyticsLog {
+  id        Int      @id @default(autoincrement())
+  event     String   // "ride_started" | "ride_completed" | "alert_triggered" | "emergency_activated" | "sos_triggered"
+  data      String   @default("{}") // JSON string
+  createdAt DateTime @default(now())
+
+  @@index([event])
+  @@index([createdAt])
+}
+
+// ─── Family Members ───
+model FamilyMember {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  name         String
+  relationship String   @default("Other")
+  phone        String   @default("")
+  location     String   @default("")
+  status       String   @default("active") // "active" | "inactive"
+  safetyScore  Int      @default(0)
+  avatarEmoji  String   @default("👤")
+  avatarColor  String   @default("#448aff")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}

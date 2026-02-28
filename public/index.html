@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="SafeLink – Proactive AI-powered safety intelligence layer for mobility and delivery ecosystems. Real-time risk scoring, route monitoring, and emergency response.">
+  <title>SafeLink – Intelligent Safety Layer for Mobility & Delivery</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════
+     AUTH SCREEN
+     ═══════════════════════════════════ -->
+  <div class="auth-screen" id="authScreen" style="display:flex">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <h1>🛡️ SafeLink</h1>
+        <p>AI Safety Intelligence</p>
+      </div>
+      <h2 id="authTitle" style="font-size:1.3rem;font-weight:700;margin-bottom:24px;text-align:center;">Welcome Back
+      </h2>
+      <div id="authError"
+        style="color:var(--red-primary);font-size:0.8rem;margin-bottom:12px;text-align:center;min-height:18px;"></div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" class="form-input" id="authEmail" placeholder="your@email.com" value="user@safelink.io">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" class="form-input" id="authPassword" placeholder="••••••" value="user123">
+      </div>
+      <div id="registerFields" style="display:none;">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" class="form-input" id="authName" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" class="form-input" id="authPhone" placeholder="+91 XXXXX XXXXX">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg" id="loginBtn"
+        style="width:100%;justify-content:center;margin-bottom:12px;">Login →</button>
+      <button class="btn btn-primary btn-lg" id="registerBtn"
+        style="width:100%;justify-content:center;margin-bottom:12px;display:none;">Create Account →</button>
+      <p id="toggleAuth"
+        style="color:var(--text-muted);font-size:0.78rem;text-align:center;cursor:pointer;text-decoration:underline;">
+        Don't have an account? Register</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════
+     MAIN APP SHELL
+     ═══════════════════════════════════ -->
+  <div class="app-shell" id="appShell" style="display:none">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <h1>SafeLink</h1>
+        <span>AI Safety Intelligence</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+
+        <div class="nav-item active" data-page="home">
+          <span class="nav-icon">🏠</span>
+          <span>Home</span>
+        </div>
+
+        <div class="nav-item" data-page="ride">
+          <span class="nav-icon">🏍️</span>
+          <span>Active Ride</span>
+        </div>
+
+        <div class="nav-item" data-page="safety">
+          <span class="nav-icon">🧠</span>
+          <span>AI Safety Engine</span>
+          <span class="nav-badge" id="alertBadge" style="display:none">0</span>
+        </div>
+
+        <div class="nav-section-label">Services</div>
+
+        <div class="nav-item" data-page="utilities">
+          <span class="nav-icon">📍</span>
+          <span>Nearby Utilities</span>
+        </div>
+
+        <div class="nav-item" data-page="family">
+          <span class="nav-icon">👨‍👩‍👧</span>
+          <span>Family Tracking</span>
+        </div>
+
+        <div class="nav-section-label">Admin</div>
+
+        <div class="nav-item" data-page="analytics">
+          <span class="nav-icon">📊</span>
+          <span>Analytics</span>
+        </div>
+
+        <div class="nav-item" id="openIncidentReport">
+          <span class="nav-icon">📝</span>
+          <span>Report Incident</span>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="safety-mode-toggle">
+          <span class="toggle-label-text">🛡️ AI Safety Mode</span>
+          <label class="toggle-switch" for="safetyModeToggle">
+            <input type="checkbox" id="safetyModeToggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <button class="btn btn-outline btn-sm" id="logoutBtn"
+          style="width:100%;justify-content:center;margin-top:10px;font-size:0.72rem;">🚪 Logout</button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+      <!-- Top Header Bar -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+          <span class="header-title" id="headerTitle">Home</span>
+        </div>
+        <div class="header-right">
+          <div class="header-status">
+            <span class="status-dot"></span>
+            <span>System Active</span>
+          </div>
+          <div class="header-user-info">
+            <div class="header-user-details">
+              <span class="header-user-name" id="headerUserName">User</span>
+              <span class="header-user-email" id="headerUserEmail">user@safelink.io</span>
+            </div>
+            <div class="header-avatar" id="headerAvatar">SL</div>
+          </div>
+        </div>
+      </header>
+
+      <div class="page-content">
+
+        <!-- PAGE 1: HOME -->
+        <div class="page active" id="page-home">
+          <section class="mission-banner">
+            <div class="mission-eyebrow">🛡️ Our Mission</div>
+            <h2 class="mission-title">
+              <span class="highlight">SafeLink</span> is a proactive AI-powered safety intelligence layer
+            </h2>
+            <p class="mission-text">
+              SafeLink is a proactive AI-powered safety intelligence layer designed to reduce mobility-related risks in
+              real time. We transform ride and delivery ecosystems from reactive emergency systems into predictive
+              safety networks.
+            </p>
+          </section>
+
+          <div class="booking-grid">
+            <div class="booking-card" id="bookRideCard">
+              <div class="booking-card-icon ride">🏍️</div>
+              <h3>Book a Ride</h3>
+              <p>Safe, AI-monitored rides with real-time route tracking, risk scoring, and emergency response
+                integration.</p>
+              <button class="btn btn-primary" id="bookRideBtn">Book Ride →</button>
+            </div>
+
+            <div class="booking-card" id="bookDeliveryCard">
+              <div class="booking-card-icon delivery">📦</div>
+              <h3>Book Instant Delivery</h3>
+              <p>AI-supervised express delivery with live package tracking, route optimization, and safety-first
+                protocols.</p>
+              <button class="btn btn-secondary" id="bookDeliveryBtn">Book Delivery →</button>
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-value" data-target="12847">0</div>
+              <div class="stat-label">Rides Protected</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" data-target="99">0</div>
+              <div class="stat-label">Safety Score Avg</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" data-target="3421">0</div>
+              <div class="stat-label">Alerts Resolved</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" data-target="47">0</div>
+              <div class="stat-label">Cities Covered</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGE 2: ACTIVE RIDE -->
+        <div class="page" id="page-ride">
+          <div class="ride-layout">
+            <div class="map-container">
+              <div class="map-header">
+                <h3>🗺️ Live Route Tracking</h3>
+                <div class="map-live-badge"><span class="dot"></span> LIVE</div>
+              </div>
+              <div id="rideMap"></div>
+              <div class="heatmap-legend" id="heatmapLegend">
+                <h5>🔥 Danger Heatmap</h5>
+                <div class="legend-scale">
+                  <span class="legend-low">Low</span>
+                  <div class="legend-gradient"></div>
+                  <span class="legend-high">High</span>
+                </div>
+                <div class="legend-items" id="legendItems"></div>
+              </div>
+            </div>
+            <div class="ride-sidebar">
+              <div class="score-card">
+                <h4>AI Safety Score</h4>
+                <div class="score-gauge">
+                  <svg width="140" height="140" viewBox="0 0 140 140">
+                    <circle class="score-gauge-bg" cx="70" cy="70" r="58"></circle>
+                    <circle class="score-gauge-fill" id="scoreGaugeFill" cx="70" cy="70" r="58" stroke-dasharray="364.4"
+                      stroke-dashoffset="0"></circle>
+                  </svg>
+                  <div class="score-gauge-value">
+                    <span class="score-number" id="scoreNumber">100</span>
+                    <span class="score-label">/ 100</span>
+                  </div>
+                </div>
+                <span class="score-status safe" id="scoreStatus">✓ Safe</span>
+              </div>
+              <div class="rider-card">
+                <h4>Rider Details</h4>
+                <div class="rider-info">
+                  <div class="rider-avatar">🏍️</div>
+                  <div class="rider-details">
+                    <h5 id="riderName">Awaiting booking...</h5>
+                    <p id="riderVehicle">—</p>
+                  </div>
+                </div>
+                <div class="rider-meta">
+                  <div class="rider-meta-item">
+                    <div class="meta-value" id="etaDisplay">--:--</div>
+                    <div class="meta-label">ETA</div>
+                  </div>
+                  <div class="rider-meta-item">
+                    <div class="meta-value" id="rideProgress">0%</div>
+                    <div class="meta-label">Progress</div>
+                  </div>
+                  <div class="rider-meta-item">
+                    <div class="meta-value" id="riderRating">—</div>
+                    <div class="meta-label">Rating</div>
+                  </div>
+                  <div class="rider-meta-item">
+                    <div class="meta-value" id="rideOTP">—</div>
+                    <div class="meta-label">OTP</div>
+                  </div>
+                </div>
+              </div>
+              <button class="sos-btn" id="sosBtn">🚨 SOS EMERGENCY</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGE 3: AI SAFETY ENGINE -->
+        <div class="page" id="page-safety">
+          <div class="safety-layout">
+            <div class="alerts-feed">
+              <div class="alerts-feed-header">
+                <h3>🧠 Live AI Detection Alerts</h3>
+                <span class="alert-count-badge" id="alertCountBadge">0</span>
+              </div>
+              <div class="alerts-list" id="alertsList">
+                <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  <p style="font-size: 2rem; margin-bottom: 12px;">🛡️</p>
+                  <p style="font-size: 0.85rem;">AI engine is monitoring. Book a ride to see live alerts.</p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="timeline-card">
+                <h4>📋 Ride Activity Timeline</h4>
+                <div class="timeline" id="timelineList">
+                  <div class="timeline-item">
+                    <h6>System initialized</h6>
+                    <p>Awaiting ride data...</p>
+                  </div>
+                </div>
+              </div>
+              <div class="score-card" style="margin-top: 16px;">
+                <h4>Scoring Algorithm</h4>
+                <div style="text-align: left; padding: 8px 0;">
+                  <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 8px;"><strong>Base
+                      Score:</strong> 100 points</p>
+                  <p style="font-size: 0.72rem; color: var(--red-primary); margin-bottom: 4px;">▼ Route Deviation: -15
+                  </p>
+                  <p style="font-size: 0.72rem; color: var(--red-primary); margin-bottom: 4px;">▼ Inactivity Alert: -10
+                  </p>
+                  <p style="font-size: 0.72rem; color: var(--red-primary); margin-bottom: 4px;">▼ High-Risk Zone: -20
+                  </p>
+                  <p style="font-size: 0.72rem; color: var(--orange-primary); margin-bottom: 4px;">▼ Night Multiplier:
+                    -5 to -15</p>
+                  <p style="font-size: 0.72rem; color: var(--green-primary);">▲ Police Proximity: +10</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGE 4: NEARBY UTILITIES -->
+        <div class="page" id="page-utilities">
+          <div class="utilities-header">
+            <h2>📍 Nearby Public Utilities</h2>
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all">All</button>
+              <button class="filter-tab" data-filter="police">🏛️ Police</button>
+              <button class="filter-tab" data-filter="hospital">🏥 Hospitals</button>
+              <button class="filter-tab" data-filter="pharmacy">💊 Pharmacies</button>
+              <button class="filter-tab" data-filter="safezone">🛡️ Safe Zones</button>
+            </div>
+          </div>
+          <div class="utilities-grid" id="utilitiesGrid">
+            <!-- Dynamically populated from backend -->
+          </div>
+        </div>
+
+        <!-- PAGE 5: FAMILY TRACKING -->
+        <div class="page" id="page-family">
+          <div class="family-grid">
+            <div class="family-map-card">
+              <div class="family-map-header">
+                <h3>👨‍👩‍👧 Family Live Tracking</h3>
+                <div class="map-live-badge"><span class="dot"></span> LIVE</div>
+              </div>
+              <canvas id="familyTrackingCanvas"></canvas>
+            </div>
+            <div class="family-sidebar" id="familySidebar">
+              <div id="familyMembersList">
+                <!-- Dynamically populated -->
+              </div>
+              <button class="btn btn-outline" id="addFamilyBtn" style="width: 100%; justify-content: center;">+ Add
+                Family Member</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGE 6: ANALYTICS DASHBOARD -->
+        <div class="page" id="page-analytics">
+          <div class="analytics-stats">
+            <div class="analytics-stat-card green">
+              <div class="analytics-stat-icon">🛡️</div>
+              <div class="analytics-stat-value" data-target="12847">0</div>
+              <div class="analytics-stat-label">Total Rides Monitored</div>
+              <div class="analytics-stat-change up">↑ 12.5% this week</div>
+            </div>
+            <div class="analytics-stat-card orange">
+              <div class="analytics-stat-icon">⚠️</div>
+              <div class="analytics-stat-value" data-target="3421">0</div>
+              <div class="analytics-stat-label">Alerts Triggered</div>
+              <div class="analytics-stat-change down">↓ 3.2% this week</div>
+            </div>
+            <div class="analytics-stat-card blue">
+              <div class="analytics-stat-icon">📊</div>
+              <div class="analytics-stat-value" data-target="87" data-suffix="%">0</div>
+              <div class="analytics-stat-label">Avg Safety Score</div>
+              <div class="analytics-stat-change up">↑ 2.1% this week</div>
+            </div>
+            <div class="analytics-stat-card red">
+              <div class="analytics-stat-icon">🚨</div>
+              <div class="analytics-stat-value" data-target="23">0</div>
+              <div class="analytics-stat-label">Emergency Events</div>
+              <div class="analytics-stat-change down">↓ 18% this month</div>
+            </div>
+          </div>
+          <div class="analytics-charts">
+            <div class="chart-card">
+              <h4>📈 Safety Score Trend (7 Days)</h4>
+              <canvas id="trendChart"></canvas>
+            </div>
+            <div class="chart-card">
+              <h4>🔄 Alert Distribution</h4>
+              <div class="donut-container">
+                <canvas id="distributionChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- .page-content -->
+    </main>
+  </div><!-- .app-shell -->
+
+  <!-- FLOATING ALERT BANNER -->
+  <div class="floating-alert" id="floatingAlert">
+    <span class="fa-icon">⚠️</span>
+    <div class="fa-content">
+      <h5>Alert Title</h5>
+      <p>Alert message goes here.</p>
+    </div>
+    <button class="fa-dismiss">✕</button>
+  </div>
+
+  <!-- SOS OVERLAY -->
+  <div class="sos-overlay" id="sosOverlay">
+    <div class="sos-modal">
+      <div class="sos-icon">🚨</div>
+      <h2>SOS ACTIVATED</h2>
+      <p>Emergency protocols engaged. Your real-time location is being shared with emergency contacts and nearby
+        authorities.</p>
+      <div class="sos-actions">
+        <button class="btn btn-danger btn-lg" id="sosCall" style="width: 100%; justify-content: center;">📞 Call
+          Emergency Services</button>
+        <button class="btn btn-outline" id="sosDismiss" style="width: 100%; justify-content: center;">Cancel
+          SOS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOKING FORM MODAL -->
+  <div class="modal-overlay" id="bookingFormOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="bookingFormTitle">🏍️ Book a Ride</h3>
+        <button class="modal-close" id="cancelBookingFormBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="bookingTypeInput" value="ride">
+        <div class="form-group">
+          <label>Pickup Location</label>
+          <input type="text" class="form-input" id="pickupInput" placeholder="Enter pickup location"
+            value="Koramangala 4th Block, Bangalore">
+        </div>
+        <div class="form-group">
+          <label>Destination</label>
+          <input type="text" class="form-input" id="destinationInput" placeholder="Enter destination"
+            value="Indiranagar 100ft Road, Bangalore">
+        </div>
+        <div class="form-group">
+          <label>Ride Preference</label>
+          <select class="form-select">
+            <option>Standard (AI Safety Enabled)</option>
+            <option>Premium (Priority Safety)</option>
+            <option>Shared Ride</option>
+          </select>
+        </div>
+        <div
+          style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: rgba(0,230,118,0.06); border: 1px solid rgba(0,230,118,0.2); border-radius: 8px;">
+          <span>🛡️</span>
+          <span style="font-size: 0.8rem; color: var(--green-primary); font-weight: 600;">AI Safety Mode will be active
+            for this ride</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline"
+          onclick="document.getElementById('bookingFormOverlay').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" id="confirmBookingBtn">Confirm Booking →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INCIDENT REPORT MODAL -->
+  <div class="modal-overlay" id="incidentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📝 Report an Incident</h3>
+        <button class="modal-close" id="closeIncidentModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Incident Type</label>
+          <select class="form-select" id="incidentType">
+            <option>Safety concern during ride</option>
+            <option>Route deviation by driver</option>
+            <option>Harassment or threat</option>
+            <option>Vehicle condition issue</option>
+            <option>Overcharging</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Severity</label>
+          <select class="form-select" id="incidentSeverity">
+            <option>Low – General feedback</option>
+            <option>Medium – Requires attention</option>
+            <option>High – Immediate action needed</option>
+            <option>Critical – Emergency</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="form-textarea" id="incidentDescription"
+            placeholder="Describe the incident in detail..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Ride/Booking ID (optional)</label>
+          <input type="text" class="form-input" id="incidentBookingId" placeholder="e.g., 1">
+        </div>
+      </div>
+
+      <!-- Report History Section -->
+      <div class="report-history-section">
+        <div class="report-history-header">
+          <h4>📋 Your Report History</h4>
+          <span class="report-history-count" id="reportHistoryCount">0</span>
+        </div>
+        <div class="report-history-list" id="reportHistoryList">
+          <div class="report-history-empty">
+            <span>📭</span>
+            <p>No reports submitted yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="cancelIncidentBtn">Cancel</button>
+        <button class="btn btn-danger" id="submitIncidentBtn">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD FAMILY MEMBER MODAL -->
+  <div class="modal-overlay" id="addFamilyModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>👨‍👩‍👧 Add Family Member</h3>
+        <button class="modal-close" id="closeFamilyModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Name *</label>
+          <input type="text" class="form-input" id="familyNameInput" placeholder="e.g., Dad, Sister, Brother">
+        </div>
+        <div class="form-group">
+          <label>Relationship</label>
+          <select class="form-select" id="familyRelationInput">
+            <option>Parent</option>
+            <option>Sibling</option>
+            <option>Spouse</option>
+            <option>Child</option>
+            <option>Friend</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" class="form-input" id="familyPhoneInput" placeholder="+91 XXXXX XXXXX">
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" class="form-input" id="familyLocationInput" placeholder="e.g., Koramangala, Bangalore">
+        </div>
+        <div class="form-group">
+          <label>Avatar Emoji</label>
+          <div class="emoji-picker" id="emojiPicker">
+            <span class="emoji-option selected" data-emoji="👤">👤</span>
+            <span class="emoji-option" data-emoji="👩">👩</span>
+            <span class="emoji-option" data-emoji="👨">👨</span>
+            <span class="emoji-option" data-emoji="👧">👧</span>
+            <span class="emoji-option" data-emoji="👦">👦</span>
+            <span class="emoji-option" data-emoji="👩‍🦳">👩‍🦳</span>
+            <span class="emoji-option" data-emoji="👨‍🦳">👨‍🦳</span>
+            <span class="emoji-option" data-emoji="👶">👶</span>
+          </div>
+        </div>
+        <div
+          style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: rgba(0,230,118,0.06); border: 1px solid rgba(0,230,118,0.2); border-radius: 8px;">
+          <span>🛡️</span>
+          <span style="font-size: 0.8rem; color: var(--green-primary); font-weight: 600;">Family members can track each
+            other's rides in real-time</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="cancelFamilyBtn">Cancel</button>
+        <button class="btn btn-primary" id="confirmAddFamilyBtn">Add Member →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+
+</html>
