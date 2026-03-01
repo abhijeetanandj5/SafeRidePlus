@@ -2,6 +2,20 @@
 
 A production-grade full-stack application combining ride booking, instant delivery, and AI-based real-time safety monitoring.
 
+👥 Meet the Builders Behind SafeLink
+
+Built through collaboration, innovation, and shared vision, SafeLink is the result of teamwork, creativity, and problem-solving by a passionate group of developers working together to make mobility safer and smarter.
+
+Core Team Members:
+
+ABHIJEET ANAND
+
+KHUSHI KUMARI
+
+MD KAMRAN HUSSAIN
+
+YASH KUMAR
+
 ## 🚀 Quick Start
 
 ```bash
